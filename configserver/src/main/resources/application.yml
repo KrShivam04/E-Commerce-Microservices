@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: configserver
+
+  profiles:
+    active: native
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: file:///C:/Users/HP/Documents/JRTP/Ecom-Microservice/configserver/src/main/resources/config
+
+    bus:
+      enabled: true
+
+    stream:
+      bindings:
+        springCloudBusInput:
+          group: configserver        # gives a stable durable queue name instead of anonymous
+        springCloudBusOutput:
+          group: configserver
+
+      rabbit:
+        bindings:
+          springCloudBusInput:
+            consumer:
+              declare-exchange: true  # tells Spring to create the exchange if missing
+              auto-bind-dlq: false
+
+server:
+  port: 8888
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
