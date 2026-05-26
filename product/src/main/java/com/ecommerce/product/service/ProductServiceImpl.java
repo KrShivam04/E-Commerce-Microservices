@@ -59,6 +59,11 @@ public class ProductServiceImpl implements ProductService
         return data;
     }
 
+    @Override
+    public Optional<ProductResponse> getProductById(long id) {
+        return productRepository.findByIdAndActiveTrue(id).map(this::mapToProductResponse);
+    }
+
     private ProductResponse mapToProductResponse(Product savedProduct)
     {
         ProductResponse productResponse = new ProductResponse();
