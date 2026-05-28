@@ -3,15 +3,16 @@ import com.ecommerce.user.dto.UserRequest;
 import com.ecommerce.user.dto.UserResponse;
 import com.ecommerce.user.services.UserService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/users")
+@Slf4j
 public class UserController
 {
     private final UserService userService;
@@ -32,6 +33,7 @@ public class UserController
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUser(@PathVariable String id)
     {
+        log.info("Fetching user with id {}", id);
         return userService.getUserById(id).map(ResponseEntity::ok).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
