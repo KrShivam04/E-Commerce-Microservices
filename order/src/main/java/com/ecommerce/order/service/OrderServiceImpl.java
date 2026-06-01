@@ -18,7 +18,6 @@ import static java.util.stream.Collectors.toList;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final CartService cartService;
-    //private final UserRepository userRepository;
     private final OrderRepository orderRepository;
 
     @Override
@@ -28,24 +27,17 @@ public class OrderServiceImpl implements OrderService {
             return Optional.empty();
         }
 
-//        Optional<User> userOptional = userRepository.findById(Long.valueOf(userId));
-//        if (userOptional.isEmpty())
-//        {
-//            return Optional.empty();
-//        }
-//
-//        User user = userOptional.get();
         BigDecimal totalPrice = cartItems.stream().map(CartItem::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Order order = new Order();
-        order.setUserId(Long.valueOf(userId));
+        order.setUserId(userId);
         order.setOrderStatus(OrderStatus.CONFIRMED);
         order.setTotalAmount(totalPrice);
         List<OrderItem> orderItems = cartItems.stream().map(item -> {
 
             OrderItem orderItem = new OrderItem();
 
-            orderItem.setProductId(Long.valueOf(item.getProductId()));
+            orderItem.setProductId(item.getProductId());
             orderItem.setQuantity(item.getQuantity());
             orderItem.setPrice(item.getPrice());
             orderItem.setOrder(order);
