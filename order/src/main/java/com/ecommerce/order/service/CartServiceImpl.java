@@ -7,6 +7,7 @@ import com.ecommerce.order.dto.ProductResponse;
 import com.ecommerce.order.dto.UserResponse;
 import com.ecommerce.order.model.CartItem;
 import com.ecommerce.order.repository.CartItemRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,41 +16,34 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CartServiceImpl implements CartService
-{
+public class CartServiceImpl implements CartService {
     private final CartItemRepository cartItemRepository;
     private final ProductServiceClient productServiceClient;
     private final UserServiceClient userServiceClient;
 
 
     @Override
-    public boolean addToCart(String userId, CartItemRequest request)
-    {
-      ProductResponse product = productServiceClient.getProductById(request.getProductId());
-        if (product == null)
-        {
+    @CircuitBreaker(name = "productService", fallbackMethod = "addToCartFallBack")
+    public boolean addToCart(String userId, CartItemRequest request) {
+        ProductResponse product = productServiceClient.getProductById(request.getProductId());
+        if (product == null) {
             return false;
         }
-        if (product.getStockQuantity() < request.getQuantity())
-        {
+        if (product.getStockQuantity() < request.getQuantity()) {
             return false;
         }
         UserResponse user = userServiceClient.getUserById(userId);
-        if (user == null)
-        {
+        if (user == null) {
             return false;
         }
 
         CartItem existingCartItem = cartItemRepository.findByUserIdAndProductId(userId, String.valueOf(request.getProductId()));
-        if (existingCartItem != null)
-        {
+        if (existingCartItem != null) {
             // item exist in cart
             existingCartItem.setQuantity(existingCartItem.getQuantity() + request.getQuantity());
-            existingCartItem.setPrice(BigDecimal.valueOf(1000)); // need to chnage by interservice communication
+            existingCartItem.setPrice(BigDecimal.valueOf(1000)); // need to change in interservice communication
             cartItemRepository.save(existingCartItem);
-        }
-        else
-        {
+        } else {
             // item does not exist in cart
             CartItem cartItem = new CartItem();
             cartItem.setUserId(userId);
@@ -61,13 +55,16 @@ public class CartServiceImpl implements CartService
         return true;
     }
 
+    public boolean addToCartFallBack(String userId, CartItemRequest request, Exception exception) {
+        exception.printStackTrace();
+        return false;
+    }
+
     @Transactional
     @Override
-    public boolean deleteItemFromCart(Long productId, String userId)
-    {
+    public boolean deleteItemFromCart(Long productId, String userId) {
         CartItem cartItem = cartItemRepository.findByUserIdAndProductId(userId, String.valueOf(productId));
-        if (cartItem != null)
-        {
+        if (cartItem != null) {
             cartItemRepository.deleteByUserIdAndProductId(userId, String.valueOf(productId));
             return true;
         }
@@ -75,15 +72,13 @@ public class CartServiceImpl implements CartService
     }
 
     @Override
-    public List<CartItem> getCart(String userId)
-    {
+    public List<CartItem> getCart(String userId) {
         return cartItemRepository.findByUserId(userId);
     }
 
     @Override
     @Transactional
-    public void clearCart(String userId)
-    {
+    public void clearCart(String userId) {
         cartItemRepository.deleteByUserId(userId);
     }
 }
