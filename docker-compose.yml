@@ -52,6 +52,14 @@ services:
       - 9411:9411
     networks:
       - backend
+  redis:
+    container_name: redis_container
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+    restart: unless-stopped
 
 volumes:
   postgres:
