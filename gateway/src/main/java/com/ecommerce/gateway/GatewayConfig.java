@@ -33,7 +33,7 @@ public class GatewayConfig {
 
                 // Order Service
                 .route("order-service",
-                        r -> r.path("/api/cart/**", "/api/order/**")
+                        r -> r.path("/api/cart/**", "/api/orders/**")
                                 .filters(f -> f
                                         .requestRateLimiter(config -> config
                                                 .setRateLimiter(redisRateLimiter())
